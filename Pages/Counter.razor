@@ -1,16 +1,166 @@
 ﻿@page "/counter"
+@using PrimerParcialAP2.Controllers;
+@using PrimerParcialAP2.Models;
+<h1>Registro Articulos</h1>
 
-<h1>Counter</h1>
 
-<p>Current count: @currentCount</p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<EditForm Model="@articulos" OnInvalidSubmit="@Guardar">
+    <DataAnnotationsValidator/>
+
+    <div class="form-group">
+        <label for="Id">Id</label>
+        <InputNumber @bind-Value="articulos.ArticuloId" class="form-control" />
+        <button type="button" @onclick="Buscar" class="btn btn-primary">Buscar</button>
+    </div>
+    <div class="form-group">
+        <label for="Fecha">Fecha</label>
+        <InputDate @bind-Value="articulos.Fecha" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="Descripcion">Descripcion</label>
+        <InputText @bind-Value="articulos.Descripcion" class="form-control" />
+        <ValidationMessage For="@(()=>articulos.Descripcion)"/>
+    </div>
+    <div class="form-group">
+        <label for="Costo">Costo</label>
+        <InputNumber  @bind-Value="articulos.Costo" @onsubmit="Calcular" class="form-control" />
+        <ValidationMessage For="@(()=>articulos.Costo)" />
+    </div>
+    <div class="form-group">
+        <label for="ptcGanancia">% Ganancia</label>
+        <InputNumber @bind-Value="articulos.ptcGanancia" @onsubmit="Calcular" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="Precio">Precio</label>
+        <InputNumber @bind-Value="articulos.Precio" class="form-control" />
+    </div>
+    <div class="form-row">
+        <button type="button" @onclick="Limpiar" class="btn btn-primary">Limpiar</button>
+        <button type="submit"@onclick="Guardar" class="btn btn-success">Guardar</button>
+        <button type="button" @onclick="Eliminar" class="btn btn-danger">Eliminar</button>
+    </div>
+
+
+
+</EditForm>
+
+
 
 @code {
-    private int currentCount = 0;
+    public Articulos articulos { get; set; }
+    public string Mensaje { get; set; }
 
-    private void IncrementCount()
+    protected override void OnInitialized()
     {
-        currentCount++;
+        articulos = new Articulos();
+        Mensaje = string.Empty;
+
     }
+
+
+    private void Limpiar()
+    {
+        articulos = new Articulos();
+        Mensaje = string.Empty;
+    }
+
+
+    private void Guardar()
+    {
+        ArticulosController db = new ArticulosController();
+
+        try
+        {
+
+            if (articulos.ArticuloId == 0)
+            {
+                if (db.Guardar(articulos))
+                {
+                    articulos = new Articulos();
+                    Mensaje = "Guardado";
+                }
+                else
+                {
+                    Mensaje = "Fue imposible Guardar";
+                }
+            }
+            else
+            {
+                if (db.Modificar(articulos))
+                {
+                    articulos = new Articulos();
+                    Mensaje = "Modificado";
+                }
+                else
+                {
+                    Mensaje = "Fue imposible Guardar";
+                }
+            }
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+
+
+
+    }
+    private void Buscar()
+    {
+        ArticulosController db = new ArticulosController();
+        try
+        {
+            Articulos articuloT = null;
+            articuloT = db.Buscar(articulos.ArticuloId);
+            if (articuloT != null)
+            {
+
+                articulos = articuloT;
+            }
+            else
+            {
+
+                Mensaje = "Imposible Buscar";
+            }
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+    private void Eliminar()
+    {
+        ArticulosController db = new ArticulosController();
+
+        try
+        {
+
+            if (db.Eliminar(articulos.ArticuloId))
+            {
+                Mensaje = "Eliminado";
+                articulos = new Articulos();
+            }
+            else
+            {
+                Mensaje = "No se pudo Eliminar";
+            }
+
+
+
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+
+    private void Calcular()
+    {
+        articulos.Precio = (articulos.Costo * (articulos.ptcGanancia / 100))+articulos.Costo;
+    }
+
 }
